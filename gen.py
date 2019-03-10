@@ -1,5 +1,5 @@
 # use:
-# python dumb.py 12 "finance" "machine learning" "veternarian" "sales" "marketing" "death" "cyber security" "manufacturing"
+# python gen.py 12 "finance" "machine learning" "veternarian" "sales" "marketing" "death" "cyber security" "manufacturing"
 # the first arg is how many slides you want (it also grabs the start and end slide of a presentation so you have that) and the rest are search terms
 
 import json
@@ -13,17 +13,17 @@ import urllib
 
 def main():
 
-    # get the serach term
     num_slides = int(sys.argv[1])
     terms = sys.argv[2:]
-    print terms
+
     search_urls = []
-    search_pages = []
     search_result_decks = {}
+
     for index in range(0,len(terms)):
         terms[index] = terms[index].replace(" ", "+")
         search_urls.append('https://www.slideshare.net/search/slideshow?searchfrom=header&q='+terms[index])
 
+        # this could be more robust but shurg
         r = requests.get(search_urls[index])
         if r.status_code != 200:
             #try again if it fails give up lol
@@ -34,9 +34,8 @@ def main():
 
         print 'extracting presentations for ' + terms[index]
         page = r.text
-        #remove all breaks for regex idk.
+        #remove all breaks for regex so it can find our elements. .json() didnt work oh well.
         page = page.replace('\r', '').replace('\n', '')
-        search_pages.append(page) #todo can i skip this step?
 
         search_result_decks[terms[index]] = []
         search_result_text_blobs_that_hopefully_have_the_link = re.findall(r"(?<=title title-link antialiased j-slideshow-title).+?(?=\>)", page)
@@ -61,7 +60,7 @@ def main():
             search_result_decks[terms[index]].append(page)
 
     slide_links = []
-    # get the first slide
+    # get the first slide.  TODO make this grab a random deck from the decks for the first and last slide instead of the same search term.
     slide_links.append(extract_slide_link_from_page(search_result_decks[terms[0]][0], 1))
 
     #extract random links
@@ -70,9 +69,8 @@ def main():
         random_deck_index = randint(0, len(search_result_decks[terms[random_term_index]])-1)
         slide_links.append(extract_slide_link_from_page(search_result_decks[terms[random_term_index]][random_deck_index]))
 
-    #get the last slide
+    #get the last slide. TODO make this use the same deck as the first slide but random choice.
     slide_links.append(extract_slide_link_from_page(search_result_decks[terms[0]][0], -1))
-
 
     # Path to be created
     path = str(int(time.time()))
