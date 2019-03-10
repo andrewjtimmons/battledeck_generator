@@ -1,3 +1,7 @@
+# try something extract_slide_link_from_page
+# python dumb.py 20 "finance" "machine learning" "veternarian" "sales" "marketing" "death" "cyber security" "manufacturing"
+# the first arg is how many slides you want and the rest are search terms
+
 import json
 import re
 import requests
@@ -41,7 +45,6 @@ def main():
 
             # TODO maybe handle no match
             deck_link = "https://www.slideshare.net/" + re.findall(r"(?<=href\=\").+?(?=\")", garbage_text)[0]
-            print deck_link
             r = requests.get(deck_link)
             if r.status_code != 200:
                 #try again if it fails give up lol
@@ -57,7 +60,7 @@ def main():
             search_result_decks[terms[index]].append(page)
 
     slide_links = []
-    #get the first slide
+    #get the firstq slide
     slide_links.append(extract_slide_link_from_page(search_result_decks[terms[0]][0], 1))
 
     #extract random links
@@ -65,6 +68,9 @@ def main():
         random_term_index = randint(0, len(terms)-1)
         random_deck_index = randint(0, len(search_result_decks[terms[random_term_index]])-1)
         slide_links.append(extract_slide_link_from_page(search_result_decks[terms[random_term_index]][random_deck_index]))
+
+    #get the last slide
+    slide_links.append(extract_slide_link_from_page(search_result_decks[terms[0]][0], -1))
 
 
     # Path to be created
@@ -80,18 +86,30 @@ def main():
             #we must never fail
             continue
 
-    print slide_links
+    print "DONE NOW GO CRUSH YOUR PRESO"
 
 
 def extract_slide_link_from_page(page, page_to_extract = None):
 
     if page_to_extract == None:
         try:
-            num_pages = re.findall(r"(?<=j-total-slides\"\>).+?(?=\<)", page)[0]
+            num_pages = int(re.findall(r"(?<=j-total-slides\"\>).+?(?=\<)", page)[0])
+            if num_pages > 5:
+                # if we have more than a couple slides lets aim for the middle so we dont get multiple conclusion slides
+                min_page = num_pages/10
+                max_page = num_pages-min_page
+                page_to_extract = randint(min_page, max_page)
+            else:
+                page_to_extract = randint(0, int(num_pages))
         except IndexError:
             return None
-        page_to_extract = randint(0, int(num_pages))
 
+    if page_to_extract == -1:
+        try:
+            num_pages = re.findall(r"(?<=j-total-slides\"\>).+?(?=\<)", page)[0]
+            page_to_extract = num_pages
+        except IndexError:
+            return None
     try:
         bad_pattern = r"(?<=data-index=\"{0}\")".format(page_to_extract) + r".+?(?=section)"
         slide_blob = re.findall(bad_pattern, page)[0]
