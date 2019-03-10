@@ -1,6 +1,6 @@
-# try something extract_slide_link_from_page
-# python dumb.py 20 "finance" "machine learning" "veternarian" "sales" "marketing" "death" "cyber security" "manufacturing"
-# the first arg is how many slides you want and the rest are search terms
+# use:
+# python dumb.py 12 "finance" "machine learning" "veternarian" "sales" "marketing" "death" "cyber security" "manufacturing"
+# the first arg is how many slides you want (it also grabs the start and end slide of a presentation so you have that) and the rest are search terms
 
 import json
 import re
@@ -32,6 +32,7 @@ def main():
             print 'oh noes two search failures moving on'
             continue
 
+        print 'extracting presentations for ' + terms[index]
         page = r.text
         #remove all breaks for regex idk.
         page = page.replace('\r', '').replace('\n', '')
@@ -60,7 +61,7 @@ def main():
             search_result_decks[terms[index]].append(page)
 
     slide_links = []
-    #get the firstq slide
+    # get the first slide
     slide_links.append(extract_slide_link_from_page(search_result_decks[terms[0]][0], 1))
 
     #extract random links
@@ -86,8 +87,7 @@ def main():
             #we must never fail
             continue
 
-    print "DONE NOW GO CRUSH YOUR PRESO"
-
+    print 'done'
 
 def extract_slide_link_from_page(page, page_to_extract = None):
 
